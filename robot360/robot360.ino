@@ -25,8 +25,8 @@
 const int offset = 1;
 
 int r=0.04;
-int lx=0.04;
-int ly=0.10;
+int lx=0.0725;
+int ly=0.105;
 
 // initializing motors (in order: FR, FL, RR, RL)
 Motor motor1R = Motor(FAIN1, FAIN2, FPWMA, offset, FSTBY);
@@ -57,9 +57,13 @@ void loop() {
 }
 
 void drive(int vx, int vy, int wz) {
-  motor1R.drive((vx + vy + (lx+ly)*wz )/r);
-  motor1L.drive((vx - vy - (lx+ly)*wz )/r);
-  motor2R.drive((vx - vy + (lx+ly)*wz )/r);
-  motor2L.drive((vx + vy - (lx+ly)*wz )/r);
+  int wfr=(vx + vy + (lx+ly)*wz )/r
+  int wfl=(vx - vy - (lx+ly)*wz )/r
+  int wrr=(vx - vy + (lx+ly)*wz )/r
+  int wrl=(vx + vy - (lx+ly)*wz )/r
+  motor1R.drive(wfr);
+  motor1L.drive(wfl);
+  motor2R.drive(wrr);
+  motor2L.drive(wrl);
 }
 
