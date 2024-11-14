@@ -218,6 +218,5 @@ if __name__=="__main__":
     counter=0
     while (time.time()-starting_time)<30:
         if(imu.get_int_status_1):
-            imu.get_data()
-            counter+=1
-            print(counter)      
+            
+            print(imu.get_data())     
