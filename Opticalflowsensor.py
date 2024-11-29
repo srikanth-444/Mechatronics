@@ -23,17 +23,17 @@ class ADNS_3080:
 
         RESET_PIN = 17  # Replace with the actual GPIO pin number
 
-        # Set up the GPIO
-        GPIO.setmode(GPIO.BCM)  # Use BCM numbering
-        GPIO.setup(RESET_PIN, GPIO.OUT)
-        GPIO.output(RESET_PIN, GPIO.HIGH)
-        time.sleep(0.01)  # Hold high for at least 10 ms
+        # # Set up the GPIO
+        # GPIO.setmode(GPIO.BCM)  # Use BCM numbering
+        # GPIO.setup(RESET_PIN, GPIO.OUT)
+        # GPIO.output(RESET_PIN, GPIO.HIGH)
+        # time.sleep(0.01)  # Hold high for at least 10 ms
 
-        # Lower the reset pin
-        GPIO.output(RESET_PIN, GPIO.LOW)
+        # # Lower the reset pin
+        # GPIO.output(RESET_PIN, GPIO.LOW)
         
-        time.sleep(0.01) 
-        GPIO.cleanup()
+        # time.sleep(0.01) 
+        # GPIO.cleanup()
         
         
     
@@ -42,18 +42,16 @@ class ADNS_3080:
 
     def read_register(self,register):
         """Read a single byte from a register."""
-
-        time.sleep(0.01)  # Short delay to stabilize
-        data=self.spi.xfer2([register,0x00])[1]  # MSB=0 for read
+        time.sleep(0.01)
+        data=self.spi.xfer([register&0x7f],100000,50)[0]  # MSB=0 for read
           # Read data
-
         return data
 
     def write_register(self,register, value):
         """Write a single byte to a register."""
     
         time.sleep(0.01)  # Short delay to stabilize
-        self.spi.xfer2([register | 0x80, value])  # MSB=1 for write
+        self.spi.xfer([register | 0x80, value],100000,50)  # MSB=1 for write
 
     def set_up_spi(self,SPI_BUS,CS_PIN):
         self.SPI_BUS=SPI_BUS
@@ -61,10 +59,11 @@ class ADNS_3080:
         self.spi = spidev.SpiDev()
         self.spi.open(self.SPI_BUS, self.CS_PIN)  # Open SPI bus 0, device 0
         self.spi.max_speed_hz = 100000 # 1 MHz max for ADNS-3080
-        self.spi.mode = 0  # SPI mode 3    
+        self.spi.mode = 0  # SPI mode 2    
 
         product_id = self.read_register(self.PRODUCT_ID)
         if product_id == 0x17: 
+            print("product id: ",hex(product_id))
             self.read_register(self.MOTION)
             self.set_resolution(1600)
         else:
@@ -132,14 +131,15 @@ if __name__=="__main__":
         
         flow_sensor.set_up_spi(spibus,cs_pin)
         # while True:
-                # dx, dy = flow_sensor.read_motion()
-                # dx_mm = (dx / 1600) * 25.4  # Convert to mm (assuming 1600 CPI)
-                # dy_mm = (dy / 1600) * 25.4
-                # print(f"dx_mm={dx_mm:.3f} mm, dy_mm={dy_mm:.3f} mm")
-                #flow_sensor.get_squal()
-        print(flow_sensor.read_register(0x02))
+        #         dx, dy = flow_sensor.read_motion()
+        #         dx_mm = (dx / 1600) * 25.4  # Convert to mm (assuming 1600 CPI)
+        #         dy_mm = (dy / 1600) * 25.4
+        #         print(f"dx_mm={dx_mm:.3f} mm, dy_mm={dy_mm:.3f} mm")
+        #         flow_sensor.get_squal()
+        #print(flow_sensor.read_register(0x02))
 
-        # image = flow_sensor.capture_image()
+        image = flow_sensor.capture_image()
+        print(image)
         # plt.imshow(image, cmap='gray')
         # plt.title("ADNS-3080 Captured Image")
         # plt.savefig("plot.png")

@@ -36,14 +36,19 @@ class Imu:
         
 
     def read_register(self,register):
-        time.sleep(0.01)  # Short delay for stabilization
+        time.sleep(0.001)  # Short delay for stabilization
         response = self.spi.xfer2([register | 0x80, 0x00])  # Read bit set
         return response[1]
 
     def write_register(self,register,value):
-        time.sleep(0.01)  # Short delay for stabilization
+        time.sleep(0.001)  # Short delay for stabilization
         response = self.spi.xfer2([register, value])  # write bit
         return response[1]
+    
+    def burst_read(self,register):
+        time.sleep(0.001)
+        response=self.spi.xfer2([register|0x80,0x0,0x00,0x00,0x00,0x00,0x00])
+        return response
     
     def divide_into_8_bit_numbers(self,number):
         # Ensure the number fits within 16 bits (0 to 65535)
@@ -216,7 +221,9 @@ if __name__=="__main__":
 
     starting_time=time.time()
     counter=0
-    while (time.time()-starting_time)<30:
+    while (time.time()-starting_time)<1:
         if(imu.get_int_status_1):
             
-            print(imu.get_data())     
+            print(counter,imu.get_data())     
+            print(imu.burst_read(imu.ACCEL_XOUT_H))
+            counter=counter+1
