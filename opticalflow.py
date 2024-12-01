@@ -1,7 +1,6 @@
 import hid
 import time
-
-
+from communication import Publisher
 
 class Opticalflow:
 
@@ -10,16 +9,13 @@ class Opticalflow:
         self.device = hid.device()
         self.vendor_id=1133
         self.product_id=49271
-
+        self.Publisher = Publisher(topic="XandY") 
+        
         self.x=0
         self.y=0
 
     def counts_to_cm(self,counts):
         return counts*2.54 / self.MOUSE_DPI
-
-    
-
-# Open the HID device for the mouse
     def read(self,):
         try:
             self.device.open(self.vendor_id, self.product_id)
@@ -43,7 +39,12 @@ class Opticalflow:
 
                     self.x=self.x+dx_cm
                     self.y=self.y+dy_cm
-                    print(f"X movement: {self.x:.4f} inches, Y movement: {self.y:.4f} inches")
+                else:
+                    pass
+                
+                data = [self.x, self.y] 
+                self.Publisher.publish_data(data)
+                
                   
         except KeyboardInterrupt:
             print("Stopped mouse tracking.")
