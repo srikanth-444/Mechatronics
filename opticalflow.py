@@ -9,7 +9,7 @@ class Opticalflow:
         self.device = hid.device()
         self.vendor_id=1133
         self.product_id=49271
-        self.Publisher = Publisher(topic="XandY") 
+        self.Publisher = Publisher(host='tcp://*:5555',topic="XandY") 
         
         self.x=0
         self.y=0
@@ -49,6 +49,7 @@ class Opticalflow:
         except KeyboardInterrupt:
             print("Stopped mouse tracking.")
             self.device.close()
+            self.Publisher.close()
         except Exception as e:
             print(f"Error: {e}")
     

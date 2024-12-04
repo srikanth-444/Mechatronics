@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 import serial
-import socket
-import time
-import pickle  # For serializing data into byte format
 import zmq
+import re
 
 class Publisher:
     def __init__(self, host='tcp://*:5555', topic='robot_data'):
@@ -35,12 +33,16 @@ class Subscriber:
         self.socket = self.context.socket(zmq.SUB)
         self.socket.connect(self.host)
         self.socket.setsockopt_string(zmq.SUBSCRIBE, self.topic)
+        self.socket.setsockopt(zmq.SNDTIMEO, 1000)
 
     def receive_data(self):
         """Receive data from the publisher (non-blocking)."""
         try:
-            message = self.socket.recv_string(flags=zmq.NOBLOCK)
-            print(f"Received: {message}")
+            message = self.socket.recv_string(flags=zmq.NOBLOCK).strip()
+            # print(f"Received: {message}")
+            numbers=re.findall(r"[-+]?\d*\.\d+|\d+", message)
+            values=[float(num) for num in numbers]
+            return values
         except zmq.Again:
             pass
 

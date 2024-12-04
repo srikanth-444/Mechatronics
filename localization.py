@@ -1,8 +1,10 @@
 import numpy as np
+import time
 from communication import Subscriber
 
+
 class EKFLocalization:
-    def __init__(self, dt=0.1, process_noise=0.01, measurement_noise=0.1):
+    def __init__(self, dt=0.1, process_noise=0.1, measurement_noise=0.001):
         # Initial state (x, y, theta)
         self.x = np.zeros(3)
         
@@ -18,7 +20,8 @@ class EKFLocalization:
         # Measurement noise (R)
         self.R = np.eye(3) * measurement_noise
 
-        self.Position = Subscriber(topic="XandY")
+        self.Position = Subscriber(host='tcp://localhost:5555',topic="XandY")
+        self.theta=Subscriber(host='tcp://localhost:5556',topic="theta")
   
         
     def predict(self, v_x, v_y, omega):
@@ -63,21 +66,21 @@ if __name__ == "__main__":
     # Simulated sensor data (control inputs)
     v_x = 1.0  # velocity in x-direction (m/s)
     v_y = 0.0  # velocity in y-direction (m/s)
-    omega = 0.1  # angular velocity (rad/s)
-
-    # Simulated measurements (x, y, theta)
-    while True:
-        # ekf.receiver.request_data()
-        ekf.Position.receive_data()
-    # z = np.array([1.0, 1.0, 0.05])  # Example measurement (measured x, y, and theta)
-
-    # for t in range(100):
-    #     # Prediction step
-    #     ekf.predict(v_x, v_y, omega)
+    omega = 0.0  # angular velocity (rad/s)
+    for t in range(1000):
+        # Prediction step
+        ekf.predict(v_x, v_y, omega)
+        xandy=ekf.Position.receive_data()
+        theta=ekf.theta.receive_data()
+        print(xandy,theta)
         
-    #     # Update step with measurements (this is where we fuse the sensor data)
-    #     ekf.update(z)
-        
-    #     # Get the current state estimate
-    #     estimated_state = ekf.get_state()
-    #     print(f"Time step {t}: x={estimated_state[0]:.2f}, y={estimated_state[1]:.2f}, theta={estimated_state[2]:.2f}")
+        if xandy is not None and theta is not None:
+            z = np.array([xandy[0],xandy[1],theta[0]]) 
+            
+            # Update step with measurements (this is where we fuse the sensor data)
+            ekf.update(z)
+            
+            # Get the current state estimate
+            estimated_state = ekf.get_state()
+            print(f"Time step {t}: x={estimated_state[0]:.2f}, y={estimated_state[1]:.2f}, theta={estimated_state[2]:.2f}")
+            time.sleep(0.1)

@@ -1,7 +1,7 @@
 import time
 import math
 
-import communication
+from communication import Publisher
 import icm20948
 
 
@@ -10,6 +10,7 @@ class ICM20948Handler:
         self.spi_device = spi_device
         self.spi_speed = spi_speed
         self.icm = None
+        self.Publisher = Publisher(host='tcp://*:5556',topic="theta")
 
     def setup(self):
         print("Initializing ICM-20948...")
@@ -45,7 +46,7 @@ class ICM20948Handler:
         q3 /= 1073741824.0
 
         if (self.icm.status in [icm20948.ICM_20948_Stat_Ok, icm20948.ICM_20948_Stat_FIFOMoreDataAvail]):
-            if (header & int(icm20948.DMP_header_bitmap_Quat6)) > 0:
+            if (header & int(icm20948.Quat6)) > 0:
                 q0 = math.sqrt(1.0 - (q1 ** 2 + q2 ** 2 + q3 ** 2))
                 qw, qx, qy, qz = q0, q2, q1, -q3
 
@@ -53,7 +54,8 @@ class ICM20948Handler:
                 pitch = math.degrees(math.asin(max(-1.0, min(1.0, 2.0 * (qw * qy - qx * qz)))))
                 yaw = math.degrees(math.atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy ** 2 + qz ** 2)))
 
-                print(f"Roll: {roll:.1f} Pitch: {pitch:.1f} Yaw: {yaw:.1f}")
+                data = [yaw] 
+                self.Publisher.publish_data(data)
 
             time.sleep(0.01)
 
@@ -62,6 +64,7 @@ class ICM20948Handler:
             while True:
                 self.process_data()
         except KeyboardInterrupt:
+            self.Publisher.close()
             print("Exiting...")
 
 if __name__ == "__main__":
