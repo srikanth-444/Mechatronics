@@ -2,6 +2,7 @@
 import serial
 # import zmq
 import re
+import time
 
 # class Publisher:
 #     def __init__(self, host='tcp://*:5555', topic='robot_data'):
@@ -61,18 +62,18 @@ class SerialCommunication:
     def read_data(self):
         while True:
             if self.ser.read() == b'\xAA':  # Start byte
-                data_1 = self.ser.read() 
-                data_2 = self.ser.read()
-                data_3 = self.ser.read()    # Read next 4 bytes (Pan, Tape, Distance L, Distance R)
+                data = self.ser.read(3)     # Read next 4 bytes (Pan, Tape, Distance L, Distance R)
                 end_byte = self.ser.read()  # End byte
 
-                # if end_byte == b'\xBB':  # Validate end byte
-                pan_and_tap = data_1
-                distance_L = data_2
-                distance_R = data_3
-                return pan_and_tap, distance_L, distance_R
-                # else:
-                #     print("Invalid end byte. Resyncing...")
+                if end_byte == b'\xBB':  # Validate end byte
+                    pan_and_tap = data[0]
+                    distance_L = data[1]
+                    distance_R = data[2]
+                    
+                    return pan_and_tap, distance_L, distance_R
+                else:
+                    print("Invalid end byte. Resyncing...")
+
 
     def send_data(self, data):
         """Send data to the serial port."""
@@ -88,7 +89,7 @@ class SerialCommunication:
                 # Convert the floating-point value to a string in ASCII decimal format
                 value_str = f"{value:.3f}"  # Adjust the number of decimal places as needed
                 self.ser.write(value_str.encode() + b'\n')
-            #time.sleep(0.1)
+            # time.sleep(0.1)
             print(data)
 
     def close_connection(self):
